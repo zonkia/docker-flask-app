@@ -1,6 +1,6 @@
 # BASIC variables
 variable "my_ip" {
-  description = "personal ip for ssh access"
+  description = "personal ip for ssh access and to access the app"
   default     = "0.0.0.0/0"
 }
 variable "app_port" {
@@ -30,4 +30,15 @@ variable "region" {
 variable "instance_size" {
   description = "Ec2 Instance size"
   default     = "t3.nano"
+}
+# PORTS (dont' change) -----------------------
+variable "ssh_port" {
+  description = "The port the server will use for SSH"
+  type        = number
+  default     = 22
+}
+variable "https_port" {
+  description = "The https port"
+  type        = number
+  default     = 443
 }

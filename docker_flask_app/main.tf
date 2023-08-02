@@ -37,6 +37,66 @@ resource "aws_vpc" "terra-vpc" {
   }
 }
 
+resource "aws_network_acl" "terra-acl" {
+  vpc_id = aws_vpc.terra-vpc.id
+  subnet_ids = [aws_subnet.terra-public-subnet1.id, aws_subnet.terra-public-subnet2.id]
+
+  ingress {
+    protocol   = "tcp"
+    rule_no    = 100
+    action     = "allow"
+    cidr_block = var.my_ip
+    from_port  = var.app_port
+    to_port    = var.app_port
+  }
+
+  ingress {
+    protocol   = "tcp"
+    rule_no    = 200
+    action     = "allow"
+    cidr_block = var.my_ip
+    from_port  = var.ssh_port
+    to_port    = var.ssh_port
+  }
+
+  ingress {
+    protocol   = "tcp"
+    rule_no    = 300
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 32768
+    to_port    = 61000
+  }
+
+  egress {
+    protocol   = "tcp"
+    rule_no    = 100
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = var.app_port
+    to_port    = var.app_port
+  }
+  egress {
+    protocol   = "tcp"
+    rule_no    = 200
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 1024
+    to_port    = 65535
+  }
+  egress {
+    protocol   = "tcp"
+    rule_no    = 300
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = var.https_port
+    to_port    = var.https_port
+  }
+  tags = {
+    Name = "main-acl"
+  }
+}
+
 resource "tls_private_key" "terra-private-key" {
   algorithm = "RSA"
   rsa_bits  = 4096
