@@ -1,14 +1,14 @@
 terraform {
   required_version = "1.5.2"
   required_providers { 
-    awsprovider = {
+    aws = {
       source  = "hashicorp/aws"
       version = "5.10.0"
     }
   }
 }
 
-provider "awsprovider" {
+provider "aws" {
   region = var.region
 }
 
@@ -52,7 +52,7 @@ resource "local_file" "terra-ssh-key" {
   content = tls_private_key.terra-private-key.private_key_pem
 }
 
-#subnety--------------------------------
+#subnets--------------------------------
 resource "aws_subnet" "terra-public-subnet1" {
   vpc_id                  = aws_vpc.terra-vpc.id
   cidr_block              = "10.0.1.0/24"
@@ -97,7 +97,7 @@ resource "aws_route_table" "terra-public-rt" {
   }
 }
 
-#przypisanie subnetów do route table--------------------------------
+#associate subnets to route tables--------------------------------
 resource "aws_route_table_association" "a" {
   subnet_id      = aws_subnet.terra-public-subnet1.id
   route_table_id = aws_route_table.terra-public-rt.id
@@ -108,9 +108,6 @@ resource "aws_route_table_association" "b" {
 }
 
 #security groups--------------------------------
-
-
-
 resource "aws_security_group" "terra-front-sg" {
   name   = "terra-front-sg"
   vpc_id = aws_vpc.terra-vpc.id
@@ -134,6 +131,7 @@ resource "aws_security_group" "terra-front-sg" {
   }
 }
 
+# IAM Role for ECR access-----------------------------------
 resource "aws_iam_policy" "terra-app-instance-policy" {
   name        = "ECR-Pull-Policy"
   path        = "/"
@@ -189,7 +187,7 @@ resource "aws_iam_instance_profile" "terra-app-instance-profile" {
 }
 
 
-# instancja public
+# Application instance-------------------
 resource "aws_instance" "terra-app-instance" {
   ami               = data.aws_ami.amazon-linux2.id
   instance_type     = var.instance_size
