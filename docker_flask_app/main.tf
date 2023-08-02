@@ -1,7 +1,16 @@
-provider "aws" {
-  region = var.region
+terraform {
+  required_version = "1.5.2"
+  required_providers { 
+    awsprovider = {
+      source  = "hashicorp/aws"
+      version = "5.10.0"
+    }
+  }
 }
 
+provider "awsprovider" {
+  region = var.region
+}
 
 data "aws_ami" "amazon-linux2" {
   most_recent = true
