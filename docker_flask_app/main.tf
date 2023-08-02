@@ -126,9 +126,9 @@ resource "aws_security_group" "terra-front-sg" {
 }
 
 resource "aws_iam_policy" "terra-app-instance-policy" {
-  name        = "Kubeadm-Master-Node-Policy"
+  name        = "ECR-Pull-Policy"
   path        = "/"
-  description = "Policy for master nodes"
+  description = "Policy for pulling image from private registry"
   policy = jsonencode({
     "Version" : "2012-10-17",
     "Statement" : [
@@ -149,7 +149,7 @@ resource "aws_iam_policy" "terra-app-instance-policy" {
 }
 
 resource "aws_iam_role" "terra-app-instance-role" {
-  name = "Kubeadm-Master-Node-Role"
+  name = "Docker-Application-Role"
   assume_role_policy = jsonencode({
     "Version" : "2012-10-17",
     "Statement" : [
@@ -169,13 +169,13 @@ resource "aws_iam_role" "terra-app-instance-role" {
 }
 
 resource "aws_iam_policy_attachment" "terra-app-instance-policy-attatchment" {
-  name       = "KubeadmMasterNodeAttatchment"
+  name       = "DockerAppInstancePolicyAttatchment"
   roles      = [aws_iam_role.terra-app-instance-role.name]
   policy_arn = aws_iam_policy.terra-app-instance-policy.arn
 }
 
 resource "aws_iam_instance_profile" "terra-app-instance-profile" {
-  name = "KubeadmMasterNodeProfile"
+  name = "DockerAppInstanceProfile"
   role = aws_iam_role.terra-app-instance-role.name
 }
 
