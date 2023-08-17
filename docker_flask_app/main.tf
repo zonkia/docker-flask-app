@@ -263,4 +263,4 @@ resource "aws_instance" "terra-app-instance" {
   security_groups   = ["${aws_security_group.terra-front-sg.id}"]
   source_dest_check = false
   iam_instance_profile = aws_iam_instance_profile.terra-app-instance-profile.name
-}   
+}
