@@ -42,7 +42,7 @@ jobs:
         category: "/language:${{matrix.language}}"
 
   build:
-    
+    needs: analyze
     name: Build Image
     runs-on: ubuntu-latest
    
