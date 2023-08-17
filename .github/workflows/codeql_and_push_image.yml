@@ -42,6 +42,7 @@ jobs:
 
   tag_repo:
     if: github.event_name == 'push'
+    needs: analyze
     runs-on: ubuntu-22.04
     name: Tag Repository
     permissions:
