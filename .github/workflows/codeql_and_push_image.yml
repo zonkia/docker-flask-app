@@ -98,6 +98,7 @@ jobs:
         echo "ecr_image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> "$GITHUB_OUTPUT"
     outputs:
       ecr_image: ${{ steps.build.outputs.ecr_image }}
+      ecr_registry: ${{ steps.login-ecr.outputs.registry }}
         
   release:
     runs-on: ubuntu-latest
@@ -130,40 +131,75 @@ jobs:
 
   terraform:
     needs: [release, build]
-    name: "Terraform Apply"
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
+    name: "Terraform Apply"
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+    - name: Clone the repository code
+      uses: actions/checkout@v3
 
-      - name: Upload Configuration
-        uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.0.0
-        id: apply-upload
-        with:
-          workspace: ${{ env.TF_WORKSPACE }}
-          directory: ${{ env.CONFIG_DIRECTORY }}
+    - name: Setup the Terraform CLI
+      uses: hashicorp/setup-terraform@v1
+      with:
+        cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+
+    - name: Initialize the Terraform working directory
+      working-directory: ./terraform
+      id: init
+      run: terraform init
 
       - name: Setup Terraform variables
         working-directory: ./terraform
         id: vars
         run: |-
           cat > terraform.tfvars <<EOF
-          image_tag = "${{ needs.build.outputs.ecr_image }}"
+          image_name = "${{ needs.build.outputs.ecr_image }}"
+          ecr_registry = "${{ needs.build.outputs.ecr_registry }}"
           EOF
 
-      - name: Create Apply Run
-        uses: hashicorp/tfc-workflows-github/actions/create-run@v1.0.0
-        id: apply-run
-        with:
-          workspace: ${{ env.TF_WORKSPACE }}
-          configuration_version: ${{ steps.apply-upload.outputs.configuration_version_id }}
+    - name: Apply the Terraform execution plan
+      working-directory: ./terraform
+      id: plan
+      run: terraform apply -auto-approve -no-color
 
-      - name: Apply
-        uses: hashicorp/tfc-workflows-github/actions/apply-run@v1.0.0
-        if: fromJSON(steps.apply-run.outputs.payload).data.attributes.actions.IsConfirmable
-        id: apply
-        with:
-          run: ${{ steps.apply-run.outputs.run_id }}
-          comment: "Apply Run from GitHub Actions CI ${{ github.sha }}"
+
+
+
+  # terraform:
+  #   needs: [release, build]
+  #   name: "Terraform Apply"
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     contents: read
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
+
+  #     - name: Upload Configuration
+  #       uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.0.0
+  #       id: apply-upload
+  #       with:
+  #         workspace: ${{ env.TF_WORKSPACE }}
+  #         directory: ${{ env.CONFIG_DIRECTORY }}
+
+  #     - name: Setup Terraform variables
+  #       working-directory: ./terraform
+  #       id: vars
+  #       run: |-
+  #         cat > terraform.tfvars <<EOF
+  #         image_tag = "${{ needs.build.outputs.ecr_image }}"
+  #         EOF
+
+  #     - name: Create Apply Run
+  #       uses: hashicorp/tfc-workflows-github/actions/create-run@v1.0.0
+  #       id: apply-run
+  #       with:
+  #         workspace: ${{ env.TF_WORKSPACE }}
+  #         configuration_version: ${{ steps.apply-upload.outputs.configuration_version_id }}
+
+  #     - name: Apply
+  #       uses: hashicorp/tfc-workflows-github/actions/apply-run@v1.0.0
+  #       if: fromJSON(steps.apply-run.outputs.payload).data.attributes.actions.IsConfirmable
+  #       id: apply
+  #       with:
+  #         run: ${{ steps.apply-run.outputs.run_id }}
+  #         comment: "Apply Run from GitHub Actions CI ${{ github.sha }}"
