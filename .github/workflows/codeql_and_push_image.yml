@@ -96,8 +96,8 @@ jobs:
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         echo "ecr_image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> "$GITHUB_OUTPUT"
-      outputs:
-        ecr_image: ${{ steps.build.outputs.ecr_image }}
+    outputs:
+      ecr_image: ${{ steps.build.outputs.ecr_image }}
         
   release:
     runs-on: ubuntu-latest
