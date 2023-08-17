@@ -108,16 +108,8 @@ jobs:
         with:
           tag_name: ${{ needs.tag_repo.outputs.new_tag }}
           release_name: Version ${{ needs.tag_repo.outputs.new_tag }}
-          body: ${{ needs.tag_repo.outputs.new_tag }}
           draft: false
           prerelease: true
-
-      - name: Publish
-        id: publish_npm
-        if: needs.tag_repo.outputs.new_tag != ''
-        uses: author/action-publish@stable
-        env:
-          REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
 
       - name: Rollback Release
         if: failure() && steps.create_release.outputs.id != ''
