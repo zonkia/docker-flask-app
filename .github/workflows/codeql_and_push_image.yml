@@ -1,4 +1,4 @@
-name: Deploy to ECR
+name: Check with CodeQL and Deploy to ECR
 
 on:
   push:
