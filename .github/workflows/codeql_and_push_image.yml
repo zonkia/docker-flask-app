@@ -91,11 +91,15 @@ jobs:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: docker-flask-app
         IMAGE_TAG: ${{ needs.tag_repo.outputs.new_tag }}
+        SECRET: ${{ secrets.SECRET_SIGNING_PASSPHRASE }}
       run: |
         cd image
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-        echo "ecr_image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> "$GITHUB_OUTPUT"
+        ecr_image_encrypted=$(gpg --symmetric --batch --passphrase "$SECRET" --output - <(echo "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG") | base64 -w0)
+        echo "ecr_image=$ecr_image_encrypted" >> "$GITHUB_OUTPUT"   
+        ecr_registry_encrypted=$(gpg --symmetric --batch --passphrase "$SECRET" --output - <(echo "$ECR_REGISTRY/$ECR_REPOSITORY") | base64 -w0)
+        echo "ecr_registry=$ecr_registry_encrypted" >> "$GITHUB_OUTPUT" 
     outputs:
       ecr_image: ${{ steps.build.outputs.ecr_image }}
       ecr_registry: ${{ steps.login-ecr.outputs.registry }}
@@ -133,6 +137,8 @@ jobs:
     needs: [release, build]
     runs-on: ubuntu-latest
     name: "Terraform Apply"
+    env:
+      SECRET: ${{ secrets.SECRET_SIGNING_PASSPHRASE }}
     steps:
       - name: Clone the repository code
         uses: actions/checkout@v3
@@ -150,10 +156,13 @@ jobs:
       - name: Setup Terraform variables
         working-directory: ./terraform
         id: vars
-        run: |-
+        run: |
+          ecr_image=$(gpg --decrypt --quiet --batch --passphrase "$SECRET" --output - <(echo "${{ needs.build.outputs.ecr_image }}" | base64 --decode))
+          ecr_registry=$(gpg --decrypt --quiet --batch --passphrase "$SECRET" --output - <(echo "${{ needs.build.outputs.ecr_registry }}" | base64 --decode))
+
           cat > terraform.tfvars <<EOF
-          image_name = "${{ needs.build.outputs.ecr_image }}"
-          ecr_registry = "${{ needs.build.outputs.ecr_registry }}"
+          image_name = "$ecr_image"
+          ecr_registry = "$ecr_registry"
           EOF
 
       - name: Apply the Terraform execution plan
