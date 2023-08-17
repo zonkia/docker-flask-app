@@ -99,10 +99,10 @@ jobs:
         ecr_image_encrypted=$(gpg --symmetric --batch --passphrase "$SECRET" --output - <(echo "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG") | base64 -w0)
         echo "ecr_image=$ecr_image_encrypted" >> "$GITHUB_OUTPUT"   
         ecr_registry_encrypted=$(gpg --symmetric --batch --passphrase "$SECRET" --output - <(echo "$ECR_REGISTRY/$ECR_REPOSITORY") | base64 -w0)
-        echo "ecr_registry=$ecr_registry_encrypted" >> "$GITHUB_OUTPUT" 
+        echo "ecr_reg=$ecr_registry_encrypted" >> "$GITHUB_OUTPUT" 
     outputs:
       ecr_image: ${{ steps.build.outputs.ecr_image }}
-      ecr_registry: ${{ steps.login-ecr.outputs.registry }}
+      ecr_reg: ${{ steps.login-ecr.outputs.registry }}
         
   release:
     runs-on: ubuntu-latest
@@ -149,16 +149,16 @@ jobs:
           cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
 
       - name: Initialize the Terraform working directory
-        working-directory: ./terraform
+        working-directory: ./
         id: init
         run: terraform init
 
       - name: Setup Terraform variables
-        working-directory: ./terraform
+        working-directory: ./
         id: vars
         run: |
           ecr_image=$(gpg --decrypt --quiet --batch --passphrase "$SECRET" --output - <(echo "${{ needs.build.outputs.ecr_image }}" | base64 --decode))
-          ecr_registry=$(gpg --decrypt --quiet --batch --passphrase "$SECRET" --output - <(echo "${{ needs.build.outputs.ecr_registry }}" | base64 --decode))
+          ecr_registry=$(gpg --decrypt --quiet --batch --passphrase "$SECRET" --output - <(echo "${{ needs.build.outputs.ecr_reg }}" | base64 --decode))
 
           cat > terraform.tfvars <<EOF
           image_name = "$ecr_image"
@@ -166,7 +166,7 @@ jobs:
           EOF
 
       - name: Apply the Terraform execution plan
-        working-directory: ./terraform
+        working-directory: ./
         id: plan
         run: terraform apply -auto-approve -no-color
 
