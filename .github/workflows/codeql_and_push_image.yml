@@ -44,55 +44,95 @@ jobs:
 #      with:
 #        category: "/language:${{matrix.language}}"
 
-  tag_repo:
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: write
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        fetch-depth: '0'
+  # tag_repo:
+  #   runs-on: ubuntu-22.04
+  #   permissions:
+  #     contents: write
+  #   steps:
+  #   - uses: actions/checkout@v3
+  #     with:
+  #       fetch-depth: '0'
 
-    - name: Bump version and push tag
-      id: bump
-      uses: anothrNick/github-tag-action@1.64.0 # Don't use @master or @v1 unless you're happy to test the latest version
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # if you don't want to set write permissions use a PAT token
-        WITH_V: true
-    outputs:
-      new_tag: ${{ steps.bump.outputs.new_tag }}
+  #   - name: Bump version and push tag
+  #     id: bump
+  #     uses: anothrNick/github-tag-action@1.64.0 # Don't use @master or @v1 unless you're happy to test the latest version
+  #     env:
+  #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # if you don't want to set write permissions use a PAT token
+  #       WITH_V: true
+  #   outputs:
+  #     new_tag: ${{ steps.bump.outputs.new_tag }}
 
-  build:
-    if: github.event_name == 'push'
-    needs: tag_repo
-    name: Build Image
-    runs-on: ubuntu-latest
+  # build:
+  #   if: github.event_name == 'push'
+  #   needs: tag_repo
+  #   name: Build Image
+  #   runs-on: ubuntu-latest
    
-    steps:
+  #   steps:
 
-    - name: Check out code
-      uses: actions/checkout@v2
+  #   - name: Check out code
+  #     uses: actions/checkout@v2
     
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: eu-central-1
+  #   - name: Configure AWS credentials
+  #     uses: aws-actions/configure-aws-credentials@v1
+  #     with:
+  #       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #       aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #       aws-region: eu-central-1
 
-    - name: Login to Amazon ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1
+  #   - name: Login to Amazon ECR
+  #     id: login-ecr
+  #     uses: aws-actions/amazon-ecr-login@v1
 
-    - name: Build, tag, and push image to Amazon ECR
-      env:
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: docker-flask-app
-        IMAGE_TAG: ${{ needs.tag_repo.outputs.new_tag }}
-      run: |
-        cd image
-        echo $ECR_REGISTRY
-        echo $ECR_REPOSITORY
-        echo $IMAGE_TAG
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+  #   - name: Build, tag, and push image to Amazon ECR
+  #     env:
+  #       ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+  #       ECR_REPOSITORY: docker-flask-app
+  #       IMAGE_TAG: ${{ needs.tag_repo.outputs.new_tag }}
+  #     run: |
+  #       cd image
+  #       echo $ECR_REGISTRY
+  #       echo $ECR_REPOSITORY
+  #       echo $IMAGE_TAG
+  #       docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+  #       docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Tag
+        id: autotagger
+        uses: butlerlogic/action-autotag@stable
+        with:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+      
+      - name: Release
+        id: create_release
+        if: steps.autotagger.outputs.tagname != ''
+        uses: actions/create-release@v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.autotagger.outputs.tagname }}
+          release_name: Version ${{ steps.autotagger.outputs.version }}
+          body: ${{ steps.autotagger.outputs.tagmessage }}
+          draft: false
+          prerelease: true
+
+      - name: Publish
+        id: publish_npm
+        if: steps.autotagger.outputs.tagname != ''
+        uses: author/action-publish@stable
+        env:
+          REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
+
+      - name: Rollback Release
+        if: failure() && steps.create_release.outputs.id != ''
+        uses: author/action-rollback@stable
+        with:
+          # Using a known release ID
+          id: ${{ steps.create_release.id }}
+          # Using a tag name
+          tag: ${{ steps.autotagger.outputs.tagname }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
