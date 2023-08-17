@@ -134,18 +134,18 @@ jobs:
     runs-on: ubuntu-latest
     name: "Terraform Apply"
     steps:
-    - name: Clone the repository code
-      uses: actions/checkout@v3
+      - name: Clone the repository code
+        uses: actions/checkout@v3
 
-    - name: Setup the Terraform CLI
-      uses: hashicorp/setup-terraform@v1
-      with:
-        cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+      - name: Setup the Terraform CLI
+        uses: hashicorp/setup-terraform@v1
+        with:
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
 
-    - name: Initialize the Terraform working directory
-      working-directory: ./terraform
-      id: init
-      run: terraform init
+      - name: Initialize the Terraform working directory
+        working-directory: ./terraform
+        id: init
+        run: terraform init
 
       - name: Setup Terraform variables
         working-directory: ./terraform
@@ -156,10 +156,10 @@ jobs:
           ecr_registry = "${{ needs.build.outputs.ecr_registry }}"
           EOF
 
-    - name: Apply the Terraform execution plan
-      working-directory: ./terraform
-      id: plan
-      run: terraform apply -auto-approve -no-color
+      - name: Apply the Terraform execution plan
+        working-directory: ./terraform
+        id: plan
+        run: terraform apply -auto-approve -no-color
 
 
 
