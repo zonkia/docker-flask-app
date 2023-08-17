@@ -42,6 +42,7 @@ jobs:
         category: "/language:${{matrix.language}}"
 
   build:
+    if: github.event_name == 'push'
     needs: analyze
     name: Build Image
     runs-on: ubuntu-latest
