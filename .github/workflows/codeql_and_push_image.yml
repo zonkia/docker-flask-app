@@ -42,6 +42,7 @@ jobs:
 
   tag_repo:
     if: github.event_name == 'push'
+    needs: analyze
     runs-on: ubuntu-22.04
     name: Tag Repository
     permissions:
@@ -63,7 +64,7 @@ jobs:
   build:
     if: github.event_name == 'push'
     needs: tag_repo
-    name: Build Image
+    name: Build Image and Push to ECR
     runs-on: ubuntu-latest
    
     steps:
@@ -95,7 +96,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     needs: [build, tag_repo]
-    name: Release with Rollback
+    name: Release || Rollback
     steps:
       
       - name: Release
