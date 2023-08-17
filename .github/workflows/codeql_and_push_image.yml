@@ -72,7 +72,7 @@ jobs:
     steps:
 
     - name: Check out code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v2
@@ -115,7 +115,7 @@ jobs:
 
       - name: Rollback Release
         if: failure() && steps.create_release.outputs.id != ''
-        uses: author/action-rollback@stable
+        uses: author/action-rollback@1.0.3
         with:
           # Using a known release ID
           id: ${{ steps.create_release.id }}
