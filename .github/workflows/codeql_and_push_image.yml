@@ -57,7 +57,9 @@ jobs:
       uses: anothrNick/github-tag-action@1.64.0 # Don't use @master or @v1 unless you're happy to test the latest version
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # if you don't want to set write permissions use a PAT token
-        WITH_V: false
+        WITH_V: true
+    outputs:
+      tag: 
 
   build:
     if: github.event_name == 'push'
@@ -85,10 +87,8 @@ jobs:
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: docker-flask-app
-        IMAGE_TAG: docker-flask-app-image
+        IMAGE_TAG: ${{ needs.release.outputs.new_tag }}
       run: |
         cd image
-        tag_v=$(git describe --tags $(git rev-list --tags --max-count=1))
-        tag=$(echo $tag_v | sed 's/v//')
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$tag .
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$tag
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
