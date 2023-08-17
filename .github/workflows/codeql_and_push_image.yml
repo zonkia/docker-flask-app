@@ -61,7 +61,7 @@ jobs:
 
   build:
     if: github.event_name == 'push'
-    needs: update-semver
+    needs: release
     name: Build Image
     runs-on: ubuntu-latest
    
