@@ -109,15 +109,15 @@ jobs:
           tag_name: ${{ needs.tag_repo.outputs.new_tag }}
           release_name: Version ${{ needs.tag_repo.outputs.new_tag }}
           draft: false
-          prerelease: true
+          #prerelease: true
 
       - name: Rollback Release
-        if: failure() && steps.create_release.outputs.id != ''
+        #if: failure() && steps.create_release.outputs.id != ''
         uses: author/action-rollback@stable
         with:
           # Using a known release ID
           id: ${{ steps.create_release.id }}
           # Using a tag name
-          tag: ${{ steps.autotagger.outputs.tagname }}
+          tag: ${{ needs.tag_repo.outputs.new_tag }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
