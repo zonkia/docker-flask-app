@@ -271,7 +271,7 @@ resource "aws_instance" "terra-app-instance" {
   iam_instance_profile = aws_iam_instance_profile.terra-app-instance-profile.name
 }
 
-resource "aws_eip" "lb" {
+resource "aws_eip" "eip" {
   instance = aws_instance.terra-app-instance.id
   domain   = "vpc"
 }
