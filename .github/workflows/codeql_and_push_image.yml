@@ -198,22 +198,12 @@ jobs:
 
         export container_status="$(ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip" sudo docker container inspect -f '{{.State.Running}}' flask_app)"
         export app_status=$(curl -LI http://$ip/ -o /dev/null -w '%{http_code}\n' -s)
-        echo $container_status
-        echo $app_status
-
         export previous_version=$(aws ecr describe-images --repository-name docker-flask-app --query 'sort_by(imageDetails,& imagePushedAt)[-2].imageTags[0]' --output text)
-        echo $previous_version
-        echo $ECR_REGISTRY/$ECR_REPOSITORY:$previous_version
-        echo $APP_PORT
-
-        if [ "true" = "$container_status" ]
-        then
-        echo container2
-        fi
 
         if [[ "200" = "$app_status" && "true" = "$container_status" ]]
         then
         echo ok
+        ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip" sudo docker run -it -e PORT=$APP_PORT -p $APP_PORT:$APP_PORT -d $ECR_REGISTRY/$ECR_REPOSITORY:$previous_version
         else
         ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip" sudo docker run -it -e PORT=$APP_PORT -p $APP_PORT:$APP_PORT -d $ECR_REGISTRY/$ECR_REPOSITORY:$previous_version
         fi
