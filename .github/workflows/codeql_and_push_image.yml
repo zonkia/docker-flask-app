@@ -173,7 +173,10 @@ jobs:
     - name: Apply the Terraform execution plan
       working-directory: ./
       id: apply
-      run: terraform apply -auto-approve -no-color
+      run: |
+        terraform apply -auto-approve -no-color
+        echo "::set-output name=SSH_KEY::$(cat myKey.pem)"
+        echo "::set-output name=EIP::$(terraform output eip_address)"
 
     - name: Check the application with Rollback
       working-directory: ./
@@ -181,6 +184,8 @@ jobs:
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: docker-flask-app
+        ssh_key: "${{ steps.apply.outputs.SSH_KEY }}"
+        EIP: "${{ steps.apply.outputs.EIP }}"
       run: |
         app_address=$(terraform output eip_address)
         sleep 1m
