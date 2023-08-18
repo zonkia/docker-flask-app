@@ -176,6 +176,7 @@ jobs:
     - name: Rollback to previous version if apply failed
       if: failure()
       working-directory: ./
+      env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: docker-flask-app
       run: |
