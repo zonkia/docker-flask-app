@@ -12,7 +12,6 @@ env:
   TF_WORKSPACE: "docker-flask-app"
   CONFIG_DIRECTORY: "./"
   APP_PORT: "80"
-  REGION: eu-central-1
 
 jobs:
   # analyze:
@@ -80,8 +79,7 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      env:
-        aws-region: $REGION
+        aws-region: ${{ secrets.REGION }}
 
     - name: Login to Amazon ECR
       id: login-ecr
@@ -141,7 +139,7 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: $REGION
+        aws-region: ${{ secrets.REGION }}
 
     - name: Login to Amazon ECR
       id: login-ecr
@@ -169,7 +167,7 @@ jobs:
         image_name = "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
         ecr_registry = "$ECR_REGISTRY/$ECR_REPOSITORY"
         app_port = "$APP_PORT"
-        region = "$REGION"
+        region = "${{ secrets.REGION }}"
         EOF
 
     - name: Apply the Terraform execution plan
