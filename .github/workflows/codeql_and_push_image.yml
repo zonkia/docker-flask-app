@@ -191,7 +191,7 @@ jobs:
         APP_ADDRESS: ${{ steps.apply.outputs.EIP }}
       run: |
         echo "$KEY" > private_key && chmod 600 private_key
-        export ip=$(echo "${$APP_ADDRESS//\"}")
+        export ip=$(echo "${APP_ADDRESS//\"}")
         ssh -o StrictHostKeyChecking=no -i myKey.pem "ec2-user@$ip"
             docker container ls
 
