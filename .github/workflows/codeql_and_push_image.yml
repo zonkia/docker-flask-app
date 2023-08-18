@@ -184,19 +184,19 @@ jobs:
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: docker-flask-app
-        ssh_key: "${{ steps.apply.outputs.SSH_KEY }}"
-        EIP: "${{ steps.apply.outputs.EIP }}"
+        KEY: "${{ steps.apply.outputs.SSH_KEY }}"
+        APP_ADDRESS: "${{ steps.apply.outputs.EIP }}"
       run: |
-        app_address=$(terraform output eip_address)
+        echo "$KEY" > myKey.pem && chmod 600 myKey.pem
         sleep 1m
-        container_status=$(ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$app_address" docker container inspect -f '{{.State.Running}}' flask_app)
+        container_status=$(ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$APP_ADDRESS" docker container inspect -f '{{.State.Running}}' flask_app)
         app_status=$(curl -LI http://$app_address/ -o /dev/null -w '%{http_code}\n' -s)
         if [ "200" = "$app_status" && "true" = "container_status" ]
         then
         echo ok
         else
         img_ver=$(aws ecr describe-images --repository-name docker-flask-app --query 'sort_by(imageDetails,& imagePushedAt)[-2].imageTags[0]' --output text)
-        docker run -it -e PORT=$APP_PORT -p $APP_PORT:$APP_PORT -d $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$APP_ADDRESS" docker run -it -e PORT=$APP_PORT -p $APP_PORT:$APP_PORT -d $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         fi
 
     # - name: Rollback to previous version if apply failed
