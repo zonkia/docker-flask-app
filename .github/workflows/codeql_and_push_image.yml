@@ -12,7 +12,7 @@ env:
   TF_WORKSPACE: "docker-flask-app"
   CONFIG_DIRECTORY: "./"
   APP_PORT: "80"
-  REGION: "eu-central-1"
+  REGION: eu-central-1
 
 jobs:
   # analyze:
