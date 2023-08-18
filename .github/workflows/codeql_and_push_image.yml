@@ -170,5 +170,24 @@ jobs:
 
     - name: Apply the Terraform execution plan
       working-directory: ./
-      id: plan
+      id: apply
       run: terraform apply -auto-approve -no-color
+
+    - name: Rollback to previous version if apply failed
+      if: failure()
+      working-directory: ./
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: docker-flask-app
+      run: |
+        img_ver=$(aws ecr describe-images --repository-name docker-flask-app --query 'sort_by(imageDetails,& imagePushedAt)[-2].imageTags[0]' --output text)
+        cat > terraform.tfvars <<EOF
+        image_name = "$ECR_REGISTRY/$ECR_REPOSITORY:$img_ver"
+        ecr_registry = "$ECR_REGISTRY/$ECR_REPOSITORY"
+        EOF
+        terraform apply -auto-approve -no-color
+
+
+
+
+
+aws ecr describe-images --repository-name docker-flask-app --query 'sort_by(imageDetails,& imagePushedAt)[-2].imageTags[0]' --output text
