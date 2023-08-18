@@ -191,7 +191,10 @@ jobs:
         APP_ADDRESS: ${{ steps.apply.outputs.EIP }}
       run: |
         export ip=$(echo "${APP_ADDRESS//\"}")
+        whoami
+        curl https://api.ipify.org
         ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip"
+        curl https://api.ipify.org
             whoami
             sudo su
             sudo docker context ls
