@@ -211,17 +211,12 @@ jobs:
         echo dwiescie
         fi
 
-        if [ " true" = "$container_status" ]
-        then
-        echo container
-        fi
-
         if [ "true" = "$container_status" ]
         then
         echo container2
         fi
 
-        if [[ "200" = "$app_status" && " true" = "$container_status" ]]
+        if [[ "200" = "$app_status" && "true" = "$container_status" ]]
         then
         echo ok
         else
