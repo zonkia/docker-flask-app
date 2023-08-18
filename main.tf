@@ -1,5 +1,5 @@
 terraform {
-  required_version = "1.5.2"
+  required_version = "1.5.5s"
   required_providers { 
     aws = {
       source  = "hashicorp/aws"
