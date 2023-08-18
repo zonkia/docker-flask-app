@@ -103,6 +103,7 @@ jobs:
     outputs:
       ecr_image: ${{ steps.build.outputs.ecr_image }}
       ecr_reg: ${{ steps.login-ecr.outputs.registry }}
+      tag: ${{ needs.tag_repo.outputs.new_tag }}
         
   release:
     runs-on: ubuntu-latest
@@ -134,7 +135,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   terraform:
-    needs: [release, build]
+    needs: [release, build, tag_repo]
     runs-on: ubuntu-latest
     name: "Terraform Apply"
     env:
