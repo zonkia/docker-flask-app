@@ -221,7 +221,7 @@ jobs:
         echo container2
         fi
 
-        if [[ "200" = "$app_status" && " true" = "$container_status" ]]
+        if [[ "200" = "$app_status" && "true" = "$container_status" ]]
         then
         echo ok
         else
