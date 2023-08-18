@@ -205,6 +205,17 @@ jobs:
         echo $previous_version
         echo $ECR_REGISTRY/$ECR_REPOSITORY:$previous_version
         echo $APP_PORT
+
+        if [ "200" = "$app_status" ]
+        then
+        echo dwiescie
+        fi
+
+        if [ " true" = "$container_status" ]
+        then
+        echo container
+        fi
+
         if [[ "200" = "$app_status" && " true" = "$container_status" ]]
         then
         echo ok
