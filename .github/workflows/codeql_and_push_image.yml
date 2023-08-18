@@ -196,7 +196,10 @@ jobs:
         echo $current_ip
         ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip" whoami
         ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip" sudo docker container ls -a
+        ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip" sudo docker container inspect -f '{{.State.Running}}' flask_app
         aws ecr describe-images --repository-name docker-flask-app --query 'sort_by(imageDetails,& imagePushedAt)[-2].imageTags[0]' --output text
+        export OUT=$(ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip" sudo docker container inspect -f '{{.State.Running}}' flask_app 2>&1 )
+        echo $OUT
 
     # sleep 1m
     # container_status=$(ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip" sudo docker container inspect -f '{{.State.Running}}' flask_app)
