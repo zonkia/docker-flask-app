@@ -193,14 +193,14 @@ jobs:
         export ip=$(echo "${APP_ADDRESS//\"}")
 
         sleep 1m
-        container_status=$(ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip" docker container inspect -f '{{.State.Running}}' flask_app)
+        container_status=$(ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip" sudo docker container inspect -f '{{.State.Running}}' flask_app)
         app_status=$(curl -LI http://$ip/ -o /dev/null -w '%{http_code}\n' -s)
         if [ "200" = "$app_status" && "true" = "container_status" ]
         then
         echo ok
         else
         img_ver=$(aws ecr describe-images --repository-name docker-flask-app --query 'sort_by(imageDetails,& imagePushedAt)[-2].imageTags[0]' --output text)
-        ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip" docker run -it -e PORT=$APP_PORT -p $APP_PORT:$APP_PORT -d $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip" sudo docker run -it -e PORT=$APP_PORT -p $APP_PORT:$APP_PORT -d $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         fi
 
     # - name: Rollback to previous version if apply failed
