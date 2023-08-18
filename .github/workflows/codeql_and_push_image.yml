@@ -149,7 +149,7 @@ jobs:
     - name: Setup the Terraform CLI
       uses: hashicorp/setup-terraform@v1
       with:
-        cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+        #cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
         terraform_wrapper: false
 
     - name: Initialize the Terraform working directory
@@ -195,6 +195,8 @@ jobs:
         export sg_rule=$(aws ec2 describe-security-group-rules --query 'SecurityGroupRules[?GroupId==`'$sg_id'`&&FromPort==`22`].SecurityGroupRuleId' --output text)
         aws ec2 modify-security-group-rules --group-id $sg_id --security-group-rules SecurityGroupRuleId=$sg_rule,SecurityGroupRule='{IpProtocol=tcp,FromPort=22,ToPort=22,CidrIpv4='$current_ip'/32}'
 
+        sleep 1m
+        
         ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip" sudo docker container stop flask_app
 
         export container_status="$(ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip" sudo docker container inspect -f '{{.State.Running}}' flask_app)"
