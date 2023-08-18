@@ -183,5 +183,4 @@ jobs:
     - name: Apply the Terraform execution plan
       working-directory: ./
       id: plan
-      #run: terraform plan
       run: terraform apply -auto-approve -no-color
