@@ -174,9 +174,9 @@ jobs:
       working-directory: ./
       id: apply
       run: |
-        terraform apply -auto-approve -no-color
-        echo "SSH_KEY=$(cat myKey.pem)" >> $GITHUB_OUTPUT
-        echo "EIP=$(terraform output eip_address)" >> $GITHUB_OUTPUT
+        terraform apply -target=local_file.terra-ssh-key -auto-approve -no-color 
+        echo "::set-output name=SSH_KEY::$(cat myKey.pem)"
+        echo "::set-output name=EIP::$(terraform output eip_address)"
 
     - name: Check the application with Rollback
       working-directory: ./
