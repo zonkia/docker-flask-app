@@ -192,9 +192,11 @@ jobs:
       run: |
         export ip=$(echo "${APP_ADDRESS//\"}")
         whoami
-        curl https://api.ipify.org
+        export current_ip=$(curl https://api.ipify.org)
+        echo $current_ip
         ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip"
-        curl https://api.ipify.org
+            export current_ip=$(curl https://api.ipify.org)
+            echo $current_ip
             whoami
             sudo su
             sudo docker context ls
