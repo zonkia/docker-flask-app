@@ -186,9 +186,3 @@ jobs:
         ecr_registry = "$ECR_REGISTRY/$ECR_REPOSITORY"
         EOF
         terraform apply -auto-approve -no-color
-
-
-
-
-
-aws ecr describe-images --repository-name docker-flask-app --query 'sort_by(imageDetails,& imagePushedAt)[-2].imageTags[0]' --output text
