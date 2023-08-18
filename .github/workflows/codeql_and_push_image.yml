@@ -110,28 +110,28 @@ jobs:
     name: Release || Rollback
     steps:
 
-      - name: Release
-        id: create_release
-        if: needs.tag_repo.outputs.new_tag != ''
-        uses: actions/create-release@v1.1.4
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ needs.tag_repo.outputs.new_tag }}
-          release_name: Version ${{ needs.tag_repo.outputs.new_tag }}
-          draft: false
-          #prerelease: true
+    - name: Release
+      id: create_release
+      if: needs.tag_repo.outputs.new_tag != ''
+      uses: actions/create-release@v1.1.4
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ needs.tag_repo.outputs.new_tag }}
+        release_name: Version ${{ needs.tag_repo.outputs.new_tag }}
+        draft: false
+        #prerelease: true
 
-      - name: Rollback Release
-        if: failure() && steps.create_release.outputs.id != ''
-        uses: author/action-rollback@1.0.3
-        with:
-          # Using a known release ID
-          id: ${{ steps.create_release.id }}
-          # Using a tag name
-          tag: ${{ needs.tag_repo.outputs.new_tag }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Rollback Release
+      if: failure() && steps.create_release.outputs.id != ''
+      uses: author/action-rollback@1.0.3
+      with:
+        # Using a known release ID
+        id: ${{ steps.create_release.id }}
+        # Using a tag name
+        tag: ${{ needs.tag_repo.outputs.new_tag }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   terraform:
     needs: [release, build]
@@ -140,35 +140,51 @@ jobs:
     env:
       SECRET: ${{ secrets.SECRET_SIGNING_PASSPHRASE }}
     steps:
-      - name: Clone the repository code
-        uses: actions/checkout@v3
+    - name: Clone the repository code
+      uses: actions/checkout@v3
 
-      - name: Setup the Terraform CLI
-        uses: hashicorp/setup-terraform@v1
-        with:
-          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: eu-central-1
 
-      - name: Initialize the Terraform working directory
-        working-directory: ./
-        id: init
-        run: terraform init
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1.6.2
 
-      - name: Setup Terraform variables
-        working-directory: ./
-        id: vars
-        run: |
-          ecr_image=$(gpg --decrypt --quiet --batch --passphrase "$SECRET" --output - <(echo "${{ needs.build.outputs.ecr_image }}" | base64 --decode))
-          ecr_registry=$(gpg --decrypt --quiet --batch --passphrase "$SECRET" --output - <(echo "${{ needs.build.outputs.ecr_reg }}" | base64 --decode))
+    - name: Setup the Terraform CLI
+      uses: hashicorp/setup-terraform@v1
+      with:
+        cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
 
-          cat > terraform.tfvars <<EOF
-          image_name = "$ecr_image"
-          ecr_registry = "$ecr_registry"
-          EOF
+    - name: Initialize the Terraform working directory
+      working-directory: ./
+      id: init
+      run: terraform init
 
-      - name: Apply the Terraform execution plan
-        working-directory: ./
-        id: plan
-        run: terraform apply -auto-approve -no-color
+    - name: Setup Terraform variables
+      working-directory: ./
+      id: vars
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: docker-flask-app
+        IMAGE_TAG: ${{ needs.tag_repo.outputs.new_tag }}
+      run: |
+        #ecr_image=$(gpg --decrypt --quiet --batch --passphrase "$SECRET" --output - <(echo "${{ needs.build.outputs.ecr_image }}" | base64 --decode))
+        #ecr_registry=$(gpg --decrypt --quiet --batch --passphrase "$SECRET" --output - <(echo "${{ needs.build.outputs.ecr_reg }}" | base64 --decode))
+
+        cat > terraform.tfvars <<EOF
+        image_name = "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+        ecr_registry = "$ECR_REGISTRY/$ECR_REPOSITORY"
+        EOF
+
+    - name: Apply the Terraform execution plan
+      working-directory: ./
+      id: plan
+      run: terraform plan
+#      run: terraform apply -auto-approve -no-color
 
 
 
