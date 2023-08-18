@@ -192,6 +192,9 @@ jobs:
       run: |
         export ip=$(echo "${APP_ADDRESS//\"}")
         ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip"
+            whoami
+            sudo su
+            sudo docker context ls
             sudo docker container ls -a
             sudo docker container inspect -f '{{.State.Running}}' flask_app
             aws ecr describe-images --repository-name docker-flask-app --query 'sort_by(imageDetails,& imagePushedAt)[-2].imageTags[0]' --output text
