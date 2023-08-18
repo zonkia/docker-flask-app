@@ -6,6 +6,12 @@ terraform {
       version = "5.10.0"
     }
   }
+  backend "s3" {
+    bucket = "mstan-terra-backend"
+    key = "state.tfstate"
+    region = "eu-central-1"
+    dynamodb_table = "mstan-terra-locking"
+  }
 }
 
 provider "aws" {
