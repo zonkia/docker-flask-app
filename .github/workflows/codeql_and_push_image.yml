@@ -195,7 +195,7 @@ jobs:
         sleep 1m
         container_status=$(ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip" sudo docker container inspect -f '{{.State.Running}}' flask_app)
         app_status=$(curl -LI http://$ip/ -o /dev/null -w '%{http_code}\n' -s)
-        if [ "200" = "$app_status" && "true" = "container_status" ]
+        if [[ "200" = "$app_status" && "true" = "container_status" ]]
         then
         echo ok
         else
