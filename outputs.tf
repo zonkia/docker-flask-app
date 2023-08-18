@@ -12,4 +12,5 @@ output "eip_address" {
 }
 output "private_key" {
   value = local_file.terra-ssh-key
+  sensitive = true
 }
