@@ -12,6 +12,7 @@ env:
   TF_WORKSPACE: "docker-flask-app"
   CONFIG_DIRECTORY: "./"
   APP_PORT: "80"
+  REGION: "eu-central-1"
 
 jobs:
   # analyze:
@@ -66,7 +67,6 @@ jobs:
       new_tag: ${{ steps.bump.outputs.new_tag }}
 
   build:
-    if: github.event_name == 'push'
     needs: tag_repo
     name: Build Image and Push to ECR
     runs-on: ubuntu-latest
@@ -80,7 +80,7 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: eu-central-1
+        aws-region: $REGION
 
     - name: Login to Amazon ECR
       id: login-ecr
@@ -140,7 +140,7 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: eu-central-1
+        aws-region: $REGION
 
     - name: Login to Amazon ECR
       id: login-ecr
@@ -149,7 +149,6 @@ jobs:
     - name: Setup the Terraform CLI
       uses: hashicorp/setup-terraform@v2
       with:
-        #cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
         terraform_wrapper: false
 
     - name: Initialize the Terraform working directory
@@ -169,6 +168,7 @@ jobs:
         image_name = "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
         ecr_registry = "$ECR_REGISTRY/$ECR_REPOSITORY"
         app_port = "$APP_PORT"
+        region = "$REGION"
         EOF
 
     - name: Apply the Terraform execution plan
@@ -177,16 +177,14 @@ jobs:
       run: |
         terraform apply -auto-approve -no-color 
         chmod 600 myKey.pem
-        echo "::set-output name=SSH_KEY::$(cat myKey.pem)"
         echo "::set-output name=EIP::$(terraform output eip_address)"
 
-    - name: Readiness check with rollback
+    - name: Readiness check with optional rollback
       working-directory: ./
       id: check
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: docker-flask-app
-        KEY: "${{ steps.apply.outputs.SSH_KEY }}"
         APP_ADDRESS: ${{ steps.apply.outputs.EIP }}
       run: |
         export ip=$(echo "${APP_ADDRESS//\"}")
@@ -203,8 +201,10 @@ jobs:
 
         if [[ "200" = "$app_status" && "true" = "$container_status" ]]
         then
-        echo "OK"
+        echo "Application and container OK"
         else
-        echo "Application not working, rolling back to previous version $previous_version"
-        ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip" sudo docker run -it -e PORT=$APP_PORT -p $APP_PORT:$APP_PORT -d $ECR_REGISTRY/$ECR_REPOSITORY:$previous_version
+        echo "Application not running, rolling back to previous version $previous_version"
+        ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip" sudo docker container stop flask_app
+        ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip" sudo docker container rm flask_app
+        ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip" sudo docker run -it -e PORT=$APP_PORT -p $APP_PORT:$APP_PORT -d --name flask_app $ECR_REGISTRY/$ECR_REPOSITORY:$previous_version
         fi
