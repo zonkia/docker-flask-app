@@ -96,13 +96,13 @@ jobs:
         cd image
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-        ecr_image_encrypted=$(gpg --symmetric --batch --passphrase "$SECRET" --output - <(echo "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG") | base64 -w0)
-        echo "ecr_image=$ecr_image_encrypted" >> "$GITHUB_OUTPUT"   
-        ecr_registry_encrypted=$(gpg --symmetric --batch --passphrase "$SECRET" --output - <(echo "$ECR_REGISTRY/$ECR_REPOSITORY") | base64 -w0)
-        echo "ecr_reg=$ecr_registry_encrypted" >> "$GITHUB_OUTPUT" 
-    outputs:
-      ecr_image: ${{ steps.build.outputs.ecr_image }}
-      ecr_reg: ${{ steps.login-ecr.outputs.registry }}
+#        ecr_image_encrypted=$(gpg --symmetric --batch --passphrase "$SECRET" --output - <(echo "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG") | base64 -w0)
+#        echo "ecr_image=$ecr_image_encrypted" >> "$GITHUB_OUTPUT"   
+#        ecr_registry_encrypted=$(gpg --symmetric --batch --passphrase "$SECRET" --output - <(echo "$ECR_REGISTRY/$ECR_REPOSITORY") | base64 -w0)
+#        echo "ecr_reg=$ecr_registry_encrypted" >> "$GITHUB_OUTPUT" 
+#    outputs:
+#      ecr_image: ${{ steps.build.outputs.ecr_image }}
+#      ecr_reg: ${{ steps.login-ecr.outputs.registry }}
         
   release:
     runs-on: ubuntu-latest
@@ -172,8 +172,8 @@ jobs:
         ECR_REPOSITORY: docker-flask-app
         IMAGE_TAG: ${{ needs.tag_repo.outputs.new_tag }}
       run: |
-        #ecr_image=$(gpg --decrypt --quiet --batch --passphrase "$SECRET" --output - <(echo "${{ needs.build.outputs.ecr_image }}" | base64 --decode))
-        #ecr_registry=$(gpg --decrypt --quiet --batch --passphrase "$SECRET" --output - <(echo "${{ needs.build.outputs.ecr_reg }}" | base64 --decode))
+#        ecr_image=$(gpg --decrypt --quiet --batch --passphrase "$SECRET" --output - <(echo "${{ needs.build.outputs.ecr_image }}" | base64 --decode))
+#        ecr_registry=$(gpg --decrypt --quiet --batch --passphrase "$SECRET" --output - <(echo "${{ needs.build.outputs.ecr_reg }}" | base64 --decode))
 
         cat > terraform.tfvars <<EOF
         image_name = "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
