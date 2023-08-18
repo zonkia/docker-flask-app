@@ -191,15 +191,17 @@ jobs:
         APP_ADDRESS: ${{ steps.apply.outputs.EIP }}
       run: |
         export ip=$(echo "${APP_ADDRESS//\"}")
-        whoami
         export current_ip=$(curl https://api.ipify.org)
-        echo $current_ip
-        ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip" whoami
-        ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip" sudo docker container ls -a
-        ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip" sudo docker container inspect -f '{{.State.Running}}' flask_app
-        aws ecr describe-images --repository-name docker-flask-app --query 'sort_by(imageDetails,& imagePushedAt)[-2].imageTags[0]' --output text
-        export OUT=$(ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip" sudo docker container inspect -f '{{.State.Running}}' flask_app 2>&1 )
-        echo $OUT
+
+        export container_status=$(ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip" sudo docker container inspect -f '{{.State.Running}}' flask_app 2>&1 )
+        export app_status=$(curl -LI http://$ip/ -o /dev/null -w '%{http_code}\n' -s)
+        echo $container_status
+        echo $app_status
+
+        export previous_version=$(aws ecr describe-images --repository-name docker-flask-app --query 'sort_by(imageDetails,& imagePushedAt)[-2].imageTags[0]' --output text)
+        echo $previous_version
+        echo $ECR_REGISTRY/$ECR_REPOSITORY:$previous_version
+        echo $APP_PORT
 
     # sleep 1m
     # container_status=$(ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip" sudo docker container inspect -f '{{.State.Running}}' flask_app)
