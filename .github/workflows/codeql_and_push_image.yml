@@ -201,6 +201,9 @@ jobs:
         if [[ "200" = "$app_status" && "true" = "$container_status" ]]
         then
         echo "Application and container OK"
+        ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip" sudo docker container stop flask_app
+        ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip" sudo docker container rm flask_app
+        ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip" sudo docker run -it -e PORT=$APP_PORT -p $APP_PORT:$APP_PORT -d --name flask_app $ECR_REGISTRY/$ECR_REPOSITORY:$previous_version
         else
         echo "Application not running, rolling back to previous version $previous_version"
         ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip" sudo docker container stop flask_app
