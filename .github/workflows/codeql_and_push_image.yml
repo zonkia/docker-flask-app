@@ -202,6 +202,12 @@ jobs:
         echo $previous_version
         echo $ECR_REGISTRY/$ECR_REPOSITORY:$previous_version
         echo $APP_PORT
+        if [[ "200" = "$app_status" && "true" = "$container_status" ]]
+        echo ok
+        else
+        echo NOT
+        fi
+
 
     # sleep 1m
     # container_status=$(ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip" sudo docker container inspect -f '{{.State.Running}}' flask_app)
