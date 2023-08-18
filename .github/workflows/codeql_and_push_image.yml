@@ -190,22 +190,18 @@ jobs:
         KEY: "${{ steps.apply.outputs.SSH_KEY }}"
         APP_ADDRESS: ${{ steps.apply.outputs.EIP }}
       run: |
-        echo "$KEY" > private_key && chmod 600 private_key
         export ip=$(echo "${APP_ADDRESS//\"}")
-        ssh -o StrictHostKeyChecking=no -i myKey.pem "ec2-user@$ip"
-            docker container ls
 
-  # echo "$KEY" > myKey.pem && chmod 600 myKey.pem
-  # sleep 1m
-  # container_status=$(ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$APP_ADDRESS" docker container inspect -f '{{.State.Running}}' flask_app)
-  # app_status=$(curl -LI http://$app_address/ -o /dev/null -w '%{http_code}\n' -s)
-  # if [ "200" = "$app_status" && "true" = "container_status" ]
-  # then
-  # echo ok
-  # else
-  # img_ver=$(aws ecr describe-images --repository-name docker-flask-app --query 'sort_by(imageDetails,& imagePushedAt)[-2].imageTags[0]' --output text)
-  # ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$APP_ADDRESS" docker run -it -e PORT=$APP_PORT -p $APP_PORT:$APP_PORT -d $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-  # fi
+        sleep 1m
+        container_status=$(ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip" docker container inspect -f '{{.State.Running}}' flask_app)
+        app_status=$(curl -LI http://$ip/ -o /dev/null -w '%{http_code}\n' -s)
+        if [ "200" = "$app_status" && "true" = "container_status" ]
+        then
+        echo ok
+        else
+        img_ver=$(aws ecr describe-images --repository-name docker-flask-app --query 'sort_by(imageDetails,& imagePushedAt)[-2].imageTags[0]' --output text)
+        ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip" docker run -it -e PORT=$APP_PORT -p $APP_PORT:$APP_PORT -d $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        fi
 
     # - name: Rollback to previous version if apply failed
     #   if: failure()
