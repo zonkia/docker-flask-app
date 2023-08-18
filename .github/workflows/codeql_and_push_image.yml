@@ -196,7 +196,7 @@ jobs:
         export sg_rule=$(aws ec2 describe-security-group-rules --query 'SecurityGroupRules[?GroupId==`'$sg_id'`&&FromPort==`22`].SecurityGroupRuleId' --output text)
         aws ec2 modify-security-group-rules --group-id $sg_id --security-group-rules SecurityGroupRuleId=$sg_rule,SecurityGroupRule='{IpProtocol=tcp,FromPort=22,ToPort=22,CidrIpv4='$current_ip'/32}'
 
-        export container_status=$(ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip" sudo docker container inspect -f '{{.State.Running}}' flask_app 2>&1 )
+        export container_status="$(ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip" sudo docker container inspect -f '{{.State.Running}}' flask_app 2>&1 )"
         export app_status=$(curl -LI http://$ip/ -o /dev/null -w '%{http_code}\n' -s)
         echo $container_status
         echo $app_status
@@ -214,6 +214,11 @@ jobs:
         if [ " true" = "$container_status" ]
         then
         echo container
+        fi
+
+        if [ "true" = "$container_status" ]
+        then
+        echo container2
         fi
 
         if [[ "200" = "$app_status" && " true" = "$container_status" ]]
