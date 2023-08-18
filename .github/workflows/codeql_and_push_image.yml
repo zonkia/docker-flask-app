@@ -193,8 +193,8 @@ jobs:
         echo "$KEY" > private_key && chmod 600 private_key
         echo $APP_ADDRESS > eip
         sed -i -e 's/"//g' eip
-        echo "export eip_address=$(head -1 eip)" >> /etc/profile
-        source /etc/profile
+        sudo echo "export eip_address=$(head -1 eip)" >> /etc/profile
+        sudo source /etc/profile
         ssh -o StrictHostKeyChecking=no -i myKey.pem "ec2-user@$eip_address"
             docker container ls
 
