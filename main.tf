@@ -262,6 +262,7 @@ resource "aws_instance" "terra-app-instance" {
     image_name      = var.image_name
     region          = var.region
     ecr_registry    = var.ecr_registry
+    error = var.error
   })
   key_name          = var.key_pair_name
   tags              = { Name = "terra-app-instance" }
