@@ -191,7 +191,7 @@ jobs:
         APP_ADDRESS: ${{ steps.apply.outputs.EIP }}
       run: |
         export ip=$(echo "${APP_ADDRESS//\"}")
-
+        container_status=$(ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip" sudo docker container ls)
         sleep 1m
         container_status=$(ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip" sudo docker container inspect -f '{{.State.Running}}' flask_app)
         app_status=$(curl -LI http://$ip/ -o /dev/null -w '%{http_code}\n' -s)
