@@ -103,7 +103,6 @@ jobs:
     outputs:
       ecr_image: ${{ steps.build.outputs.ecr_image }}
       ecr_reg: ${{ steps.login-ecr.outputs.registry }}
-      tag: ${{ needs.tag_repo.outputs.new_tag }}
         
   release:
     runs-on: ubuntu-latest
@@ -184,8 +183,8 @@ jobs:
     - name: Apply the Terraform execution plan
       working-directory: ./
       id: plan
-      run: terraform plan
-#      run: terraform apply -auto-approve -no-color
+      #run: terraform plan
+      run: terraform apply -auto-approve -no-color
 
 
 
