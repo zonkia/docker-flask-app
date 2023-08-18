@@ -248,7 +248,7 @@ resource "aws_iam_policy_attachment" "terra-app-instance-policy-attatchment" {
 }
 
 resource "aws_iam_instance_profile" "terra-app-instance-profile" {
-  name = "DockerAppInstanceProfile"
+  name = "Docker-Application-Role"
   role = aws_iam_role.terra-app-instance-role.name
 }
 
