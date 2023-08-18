@@ -206,16 +206,6 @@ jobs:
         echo $ECR_REGISTRY/$ECR_REPOSITORY:$previous_version
         echo $APP_PORT
 
-        if [ "200" = "$app_status" ]
-        then
-        echo dwiescie
-        fi
-
-        if [ " true" = "$container_status" ]
-        then
-        echo container2
-        fi
-
         if [ "true" = "$container_status" ]
         then
         echo container2
@@ -225,54 +215,5 @@ jobs:
         then
         echo ok
         else
-        echo NOT
+        ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip" sudo docker run -it -e PORT=$APP_PORT -p $APP_PORT:$APP_PORT -d $ECR_REGISTRY/$ECR_REPOSITORY:$previous_version
         fi
-
-
-    # sleep 1m
-    # container_status=$(ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip" sudo docker container inspect -f '{{.State.Running}}' flask_app)
-    # app_status=$(curl -LI http://$ip/ -o /dev/null -w '%{http_code}\n' -s)
-    # if [[ "200" = "$app_status" && "true" = "container_status" ]]
-    # then
-    # echo ok
-    # else
-    # img_ver=$(aws ecr describe-images --repository-name docker-flask-app --query 'sort_by(imageDetails,& imagePushedAt)[-2].imageTags[0]' --output text)
-    # ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip" sudo docker run -it -e PORT=$APP_PORT -p $APP_PORT:$APP_PORT -d $ECR_REGISTRY/$ECR_REPOSITORY:$previous_version
-    # fi
-
-    # - name: Rollback to previous version if apply failed
-    #   if: failure()
-    #   working-directory: ./
-    #   env:
-    #     ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-    #     ECR_REPOSITORY: docker-flask-app
-    #   run: |
-    #     img_ver=$(aws ecr describe-images --repository-name docker-flask-app --query 'sort_by(imageDetails,& imagePushedAt)[-2].imageTags[0]' --output text)
-    #     cat > terraform.tfvars <<EOF
-    #     image_name = "$ECR_REGISTRY/$ECR_REPOSITORY:$img_ver"
-    #     ecr_registry = "$ECR_REGISTRY/$ECR_REPOSITORY"
-    #     EOF
-    #     terraform apply -auto-approve -no-color
-
-    # - name: Rollback to previous version if apply failed
-    #   if: failure()
-    #   env:
-    #       PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-    #       HOSTNAME: ${{secrets.SSH_HOST}}
-    #       USER_NAME: ${{secrets.USER_NAME}}
-    
-    #   run: |
-    #     echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
-    #     ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
-
-    #         # Now we have got the access of EC2 and we will start the deploy .
-    #         cd /home/ubuntu/<PROJECT_DIRECTORY> &&
-    #         git checkout dev &&
-    #         git fetch --all &&
-    #         git reset --hard origin/dev &&
-    #         git pull origin dev &&
-    #         sudo npm i &&
-    #         sudo npm run build &&
-    #         sudo pm2 stop ./dist/index.js &&
-    #         sudo pm2 start ./dist/index.js
-    #         '
