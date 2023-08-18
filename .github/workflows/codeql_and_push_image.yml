@@ -175,8 +175,10 @@ jobs:
       id: apply
       run: |
         terraform apply -auto-approve -no-color
-        echo "::set-output name=SSH_KEY::$(cat myKey.pem)"
-        echo "::set-output name=EIP::$(terraform output eip_address)"
+#echo "::set-output name=SSH_KEY::$(cat myKey.pem)"
+#echo "::set-output name=EIP::$(terraform output eip_address)"
+        echo "SSH_KEY=$(cat myKey.pem)" >> $GITHUB_OUTPUT
+        echo "EIP=$(terraform output eip_address)" >> $GITHUB_OUTPUT
 
     - name: Check the application with Rollback
       working-directory: ./
