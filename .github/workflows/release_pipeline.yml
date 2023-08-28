@@ -178,7 +178,7 @@ jobs:
         if [[ "200" = "$app_status" && "true" = "$container_status" ]]
         then
         echo "Application and container OK"
-        echo "app_state=ok" >> "$GITHUB_OUTPUT"
+        echo "app_state=NOT" >> "$GITHUB_OUTPUT"
         else
         echo "Application not running, rolling back to previous version $previous_version"
         ssh -i myKey.pem -o StrictHostKeyChecking=no "ec2-user@$ip" sudo docker container stop flask_app
