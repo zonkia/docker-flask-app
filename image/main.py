@@ -20,7 +20,7 @@ def index():
             </form>"""
         + "Miles: "
         + miles
-        + " / Kilometersss: "
+        + " / Kilometers: "
         + kms
     )
 
